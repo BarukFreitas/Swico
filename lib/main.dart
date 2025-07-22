@@ -16,27 +16,25 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Torneio Suíço',
-      debugShowCheckedModeBanner: false, 
+      debugShowCheckedModeBanner: false, // Remove a faixa de debug
       theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-        brightness: Brightness.light,
+        primarySwatch: Colors.deepPurple, // Cor principal
+        brightness: Brightness.light, // Tema claro
         visualDensity: VisualDensity.adaptivePlatformDensity,
-        textTheme: GoogleFonts.poppinsTextTheme(
+        textTheme: GoogleFonts.poppinsTextTheme( // Usando Google Fonts para o texto
           Theme.of(context).textTheme,
         ).apply(
-          bodyColor: Colors.black87,
-          displayColor: Colors.black87, 
+          bodyColor: Colors.black87, // Cor do texto principal
+          displayColor: Colors.black87, // Cor dos títulos
         ),
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.deepPurple.shade700,
           foregroundColor: Colors.white,
-          elevation: 0,
+          elevation: 0, // Sem sombra na AppBar
           titleTextStyle: GoogleFonts.poppins(
             fontSize: 22,
             fontWeight: FontWeight.bold,
@@ -47,7 +45,7 @@ class MyApp extends StatelessWidget {
           backgroundColor: Colors.deepOrange,
           foregroundColor: Colors.white,
         ),
-        cardTheme: CardThemeData(
+        cardTheme: CardThemeData( // Corrigido para CardThemeData
           elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
@@ -66,8 +64,13 @@ class MyApp extends StatelessWidget {
           labelStyle: GoogleFonts.poppins(color: Colors.deepPurple),
           hintStyle: GoogleFonts.poppins(color: Colors.grey.shade600),
         ),
+        colorScheme: ColorScheme.fromSwatch(
+          primarySwatch: Colors.deepPurple,
+        ).copyWith(
+          secondary: Colors.teal, // Adicionado secondary color para o botão "Ver Rodada Atual"
+        ),
       ),
-      home: HomeScreen(),
+      home: HomeScreen(), // Nossa tela inicial
     );
   }
 }

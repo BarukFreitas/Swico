@@ -3,10 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:swico/providers/tournament_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:swico/widgets/match_card.dart';
+import 'package:swico/screens/ranking_screen.dart';
 
 class RoundsScreen extends StatelessWidget {
-  const RoundsScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,23 +20,80 @@ class RoundsScreen extends StatelessWidget {
       body: Consumer<TournamentProvider>(
         builder: (context, tournamentProvider, child) {
           if (tournamentProvider.currentRound == null || tournamentProvider.currentRound!.matches.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.sports_esports, size: 80, color: Colors.grey.shade400),
-                  SizedBox(height: 10),
-                  Text(
-                    'Nenhuma partida nesta rodada.',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey.shade600),
-                  ),
-                  Text(
-                    'Verifique a geração de rodadas.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade500),
-                  ),
-                ],
-              ),
-            );
+            if (tournamentProvider.completedRounds == tournamentProvider.totalRounds && tournamentProvider.totalRounds > 0) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.emoji_events, size: 100, color: Theme.of(context).primaryColor),
+                    SizedBox(height: 20),
+                    Text(
+                      'Torneio Finalizado!',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      'Todos os resultados foram registrados.',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey.shade600),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) => RankingScreen(),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.leaderboard),
+                      label: Text('Ver Classificação Final'),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                        backgroundColor: Colors.blueAccent,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () {
+                        tournamentProvider.endTournament();
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Torneio encerrado. Crie um novo!'),
+                            backgroundColor: Colors.blueGrey,
+                          ),
+                        );
+                      },
+                      child: Text('Novo Torneio'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blueGrey,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.sports_esports, size: 80, color: Colors.grey.shade400),
+                    SizedBox(height: 10),
+                    Text(
+                      'Nenhuma partida nesta rodada.',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey.shade600),
+                    ),
+                    Text(
+                      'Verifique a geração de rodadas ou número de jogadores.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade500),
+                    ),
+                  ],
+                ),
+              );
+            }
           }
 
           return Column(
@@ -61,6 +117,16 @@ class RoundsScreen extends StatelessWidget {
                           textAlign: TextAlign.center,
                         ),
                         SizedBox(height: 10),
+                        Text(
+                          'Rodadas: ${tournamentProvider.currentRound!.roundNumber} / ${tournamentProvider.totalRounds}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade700,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 5),
                         Text(
                           'Rodada Completa: ${tournamentProvider.currentRound!.isCompleted ? 'Sim' : 'Não'}',
                           style: GoogleFonts.poppins(
@@ -96,13 +162,27 @@ class RoundsScreen extends StatelessWidget {
                       ? () {
                           tournamentProvider.advanceToNextRound();
                           if (tournamentProvider.currentRound == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Fim do torneio ou sem mais rodadas!'),
-                                backgroundColor: Colors.blueAccent,
-                              ),
-                            );
-                            Navigator.of(context).pop();
+                            if (tournamentProvider.completedRounds == tournamentProvider.totalRounds) {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (context) => RankingScreen(),
+                                ),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Torneio Finalizado!'),
+                                  backgroundColor: Colors.blueAccent,
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Erro ao gerar próxima rodada ou torneio inconcluso.'),
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                              );
+                              Navigator.of(context).pop();
+                            }
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -117,7 +197,7 @@ class RoundsScreen extends StatelessWidget {
                   label: Text('Próxima Rodada'),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 15),
-                    backgroundColor: tournamentProvider.currentRound!.isCompleted ? Colors.deepPurple : Colors.grey,
+                    backgroundColor: tournamentProvider.currentRound!.isCompleted ? Theme.of(context).primaryColor : Colors.grey,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),

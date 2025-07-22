@@ -2,20 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:swico/providers/tournament_provider.dart';
 import 'package:swico/widgets/add_player_dialog.dart';
-import 'package:swico/widgets/player_list_title.dart';
+import 'package:swico/widgets/player_list_tile.dart';
 import 'package:swico/screens/rounds_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final TextEditingController _tournamentNameController = TextEditingController();
   final TextEditingController _playerNameController = TextEditingController();
-
-  HomeScreen({super.key});
+  final TextEditingController _totalRoundsController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Torneio Suíço'),
+        title: Text('Swico'),
         centerTitle: true,
       ),
       body: Consumer<TournamentProvider>(
@@ -29,7 +28,7 @@ class HomeScreen extends StatelessWidget {
       ),
       floatingActionButton: Consumer<TournamentProvider>(
         builder: (context, tournamentProvider, child) {
-          if (tournamentProvider.currentTournament != null) {
+          if (tournamentProvider.currentTournament != null && tournamentProvider.currentRound == null) {
             return FloatingActionButton.extended(
               onPressed: () {
                 showDialog(
@@ -69,7 +68,7 @@ class HomeScreen extends StatelessWidget {
           ),
           SizedBox(height: 20),
           Text(
-            'Crie seu primeiro torneio!',
+            'Crie seu torneio!',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
@@ -82,6 +81,16 @@ class HomeScreen extends StatelessWidget {
               prefixIcon: Icon(Icons.text_fields),
             ),
           ),
+          SizedBox(height: 15),
+          TextField(
+            controller: _totalRoundsController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: 'Número de Rodadas',
+              hintText: 'Ex: 5',
+              prefixIcon: Icon(Icons.repeat),
+            ),
+          ),
           SizedBox(height: 20),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
@@ -91,13 +100,15 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             onPressed: () {
-              if (_tournamentNameController.text.isNotEmpty) {
-                tournamentProvider.createNewTournament(_tournamentNameController.text);
+              final int? totalRounds = int.tryParse(_totalRoundsController.text);
+              if (_tournamentNameController.text.isNotEmpty && totalRounds != null && totalRounds > 0) {
+                tournamentProvider.createNewTournament(_tournamentNameController.text, totalRounds);
                 _tournamentNameController.clear();
+                _totalRoundsController.clear();
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Por favor, insira um nome para o torneio.'),
+                    content: Text('Por favor, insira um nome e um número válido de rodadas (>0).'),
                     backgroundColor: Colors.redAccent,
                   ),
                 );
@@ -140,7 +151,13 @@ class HomeScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 10),
-                  if (tournamentProvider.players.length >= 2)
+                  Text(
+                    'Rodadas: ${tournamentProvider.completedRounds} / ${tournamentProvider.totalRounds}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 10),
+                  if (tournamentProvider.players.length >= 2 && tournamentProvider.currentRound == null)
                     ElevatedButton.icon(
                       onPressed: () {
                         tournamentProvider.startTournament();
@@ -162,6 +179,40 @@ class HomeScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(vertical: 12),
                         backgroundColor: Colors.green.shade600,
                         foregroundColor: Colors.white,
+                      ),
+                    )
+                  else if (tournamentProvider.currentRound != null)
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => RoundsScreen(),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.visibility),
+                      label: Text('Ver Rodada Atual'),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: Theme.of(context).colorScheme.secondary,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  SizedBox(height: 10),
+                  if (tournamentProvider.currentRound == null || tournamentProvider.completedRounds == tournamentProvider.totalRounds)
+                    TextButton(
+                      onPressed: () {
+                        tournamentProvider.endTournament();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Torneio encerrado. Crie um novo!'),
+                            backgroundColor: Colors.blueGrey,
+                          ),
+                        );
+                      },
+                      child: Text('Novo Torneio'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blueGrey,
                       ),
                     ),
                 ],
@@ -191,7 +242,7 @@ class HomeScreen extends StatelessWidget {
               : ListView.builder(
                   itemCount: tournamentProvider.players.length,
                   itemBuilder: (context, index) {
-                    final player = tournamentProvider.players[index];
+                    final player = tournamentProvider.currentRanking[index];
                     return PlayerListTile(
                       player: player,
                       onRemove: () {
