@@ -3,10 +3,13 @@ import 'package:provider/provider.dart';
 import 'package:swico/providers/tournament_provider.dart';
 import 'package:swico/widgets/add_player_dialog.dart';
 import 'package:swico/widgets/player_list_title.dart';
+import 'package:swico/screens/rounds_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final TextEditingController _tournamentNameController = TextEditingController();
   final TextEditingController _playerNameController = TextEditingController();
+
+  HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +144,11 @@ class HomeScreen extends StatelessWidget {
                     ElevatedButton.icon(
                       onPressed: () {
                         tournamentProvider.startTournament();
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => RoundsScreen(),
+                          ),
+                        );
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text('Torneio iniciado!'),

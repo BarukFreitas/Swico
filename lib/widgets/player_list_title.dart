@@ -7,10 +7,10 @@ class PlayerListTile extends StatelessWidget {
   final VoidCallback onRemove;
 
   const PlayerListTile({
-    Key? key,
+    super.key,
     required this.player,
     required this.onRemove,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +21,8 @@ class PlayerListTile extends StatelessWidget {
         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-          child: Icon(Icons.person, color: Theme.of(context).primaryColor),
           radius: 25,
+          child: Icon(Icons.person, color: Theme.of(context).primaryColor),
         ),
         title: Text(
           player.name,

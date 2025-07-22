@@ -6,10 +6,10 @@ class AddPlayerDialog extends StatelessWidget {
   final Function(String) onAddPlayer;
 
   const AddPlayerDialog({
-    Key? key,
+    super.key,
     required this.playerNameController,
     required this.onAddPlayer,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
